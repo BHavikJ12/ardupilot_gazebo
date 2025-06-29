@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Created-By: eProsima
+Main-Class: com.eprosima.microxrcedds.microxrceddsgen
+Class-Path: idlparser-2.0.0.jar
+

@@ -1,0 +1,120 @@
+libraries/AP_DDS/AP_DDS_UDP.cpp.0.o: \
+ ../../libraries/AP_DDS/AP_DDS_UDP.cpp ap_config.h \
+ ../../libraries/AP_DDS/AP_DDS_Client.h \
+ ../../libraries/AP_DDS/AP_DDS_config.h \
+ ../../libraries/AP_GPS/AP_GPS_config.h \
+ ../../libraries/AP_HAL/AP_HAL_Boards.h \
+ ../../libraries/AP_HAL/board/sitl.h \
+ ../../libraries/AP_HAL_SITL/Semaphores.h \
+ ../../libraries/AP_HAL/AP_HAL_Macros.h \
+ ../../libraries/AP_HAL/Semaphores.h \
+ ../../libraries/AP_HAL/AP_HAL_Namespace.h \
+ ../../libraries/AP_Common/missing/string.h \
+ ../../libraries/AP_HAL/utility/functor.h \
+ ../../libraries/AP_Common/missing/type_traits \
+ ../../libraries/AP_Common/AP_Common.h \
+ ../../libraries/AP_HAL_SITL/AP_HAL_SITL_Namespace.h \
+ ../../libraries/GCS_MAVLink/GCS_config.h \
+ ../../libraries/AP_Relay/AP_Relay_config.h \
+ ../../libraries/AP_Mission/AP_Mission_config.h \
+ ../../libraries/AP_InertialSensor/AP_InertialSensor_config.h \
+ ../../libraries/AP_Logger/AP_Logger_config.h \
+ ../../libraries/AP_Filesystem/AP_Filesystem_config.h \
+ ../../libraries/AC_Fence/AC_Fence_config.h \
+ ../../libraries/AP_Rally/AP_Rally_config.h \
+ ../../libraries/AP_Arming/AP_Arming_config.h \
+ ../../libraries/AP_RangeFinder/AP_RangeFinder_config.h \
+ ../../libraries/AP_MSP/AP_MSP_config.h \
+ ../../libraries/AP_Scripting/AP_Scripting_config.h \
+ ../../libraries/AP_SerialManager/AP_SerialManager_config.h \
+ ../../libraries/AP_Networking/AP_Networking_Config.h \
+ ../../libraries/AP_CANManager/AP_CANManager_config.h \
+ ../../libraries/AP_VisualOdom/AP_VisualOdom_config.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/client.h \
+ modules/Micro-XRCE-DDS-Client/include/uxr/client/config.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/session.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/session_info.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/seq_num.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/object_id.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/visibility.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/stream_storage.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/output_best_effort_stream.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/output_reliable_stream.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/reliable_stream.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/input_best_effort_stream.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/input_reliable_stream.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/stream/stream_id.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/type/xrce_types.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/defines.h \
+ ../../modules/Micro-CDR/include/ucdr/microcdr.h \
+ ../../modules/Micro-CDR/include/ucdr/visibility.h \
+ modules/Micro-CDR/include/ucdr/config.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/write_access.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/read_access.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/create_entities_ref.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/common_create_entities.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/create_entities_xml.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/session/create_entities_bin.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/transport.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/profile/transport/custom/custom_transport.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/core/communication/communication.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/profile/transport/stream_framing/stream_framing_protocol.h \
+ ../../modules/Micro-XRCE-DDS-Client/include/uxr/client/profile/multithread/multithread.h \
+ libraries/AP_DDS/generated/ardupilot_msgs/msg/GlobalPosition.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Twist.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Vector3.h \
+ libraries/AP_DDS/generated/std_msgs/msg/Header.h \
+ libraries/AP_DDS/generated/builtin_interfaces/msg/Time.h \
+ libraries/AP_DDS/generated/sensor_msgs/msg/NavSatFix.h \
+ libraries/AP_DDS/generated/sensor_msgs/msg/NavSatStatus.h \
+ libraries/AP_DDS/generated/tf2_msgs/msg/TFMessage.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/TransformStamped.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Transform.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Quaternion.h \
+ libraries/AP_DDS/generated/sensor_msgs/msg/BatteryState.h \
+ libraries/AP_DDS/generated/sensor_msgs/msg/Imu.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Vector3.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Quaternion.h \
+ libraries/AP_DDS/generated/ardupilot_msgs/msg/Status.h \
+ libraries/AP_DDS/generated/sensor_msgs/msg/Joy.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/PoseStamped.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Pose.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Point.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/TwistStamped.h \
+ libraries/AP_DDS/generated/geometry_msgs/msg/Twist.h \
+ libraries/AP_DDS/generated/geographic_msgs/msg/GeoPointStamped.h \
+ libraries/AP_DDS/generated/geographic_msgs/msg/GeoPoint.h \
+ libraries/AP_DDS/generated/ardupilot_msgs/msg/Airspeed.h \
+ libraries/AP_DDS/generated/ardupilot_msgs/msg/Rc.h \
+ libraries/AP_DDS/generated/geographic_msgs/msg/GeoPoseStamped.h \
+ libraries/AP_DDS/generated/geographic_msgs/msg/GeoPose.h \
+ libraries/AP_DDS/generated/rosgraph_msgs/msg/Clock.h \
+ libraries/AP_DDS/generated/rcl_interfaces/srv/SetParameters.h \
+ libraries/AP_DDS/generated/rcl_interfaces/msg/Parameter.h \
+ libraries/AP_DDS/generated/rcl_interfaces/msg/ParameterValue.h \
+ libraries/AP_DDS/generated/rcl_interfaces/msg/SetParametersResult.h \
+ libraries/AP_DDS/generated/rcl_interfaces/msg/ParameterValue.h \
+ libraries/AP_DDS/generated/rcl_interfaces/msg/ParameterType.h \
+ libraries/AP_DDS/generated/rcl_interfaces/srv/GetParameters.h \
+ ../../libraries/AP_HAL/AP_HAL.h ../../libraries/AP_HAL/AP_HAL_Main.h \
+ ../../libraries/AP_HAL/HAL.h ../../libraries/AP_HAL/AnalogIn.h \
+ ../../libraries/AP_HAL/GPIO.h ../../libraries/AP_HAL/RCInput.h \
+ ../../libraries/AP_HAL/RCOutput.h ../../libraries/AP_HAL/SPIDevice.h \
+ ../../libraries/AP_HAL/Device.h \
+ ../../libraries/AP_Common/missing/utility \
+ ../../libraries/AP_HAL/utility/OwnPtr.h \
+ ../../libraries/AP_Common/missing/cstddef \
+ ../../libraries/AP_HAL/WSPIDevice.h ../../libraries/AP_HAL/Storage.h \
+ ../../libraries/AP_HAL/UARTDriver.h \
+ ../../libraries/AP_HAL/utility/BetterStream.h \
+ ../../libraries/AP_HAL/system.h ../../libraries/AP_HAL/OpticalFlow.h \
+ ../../libraries/AP_HAL/DSP.h ../../libraries/AP_HAL/utility/RingBuffer.h \
+ ../../libraries/AP_HAL/CANIface.h ../../libraries/AP_HAL/Scheduler.h \
+ ../../libraries/AP_HAL/Util.h ../../libraries/AP_HAL/Flash.h \
+ ../../libraries/AP_Param/AP_Param.h \
+ ../../libraries/StorageManager/StorageManager.h \
+ ../../libraries/AP_BoardConfig/AP_BoardConfig_config.h \
+ ../../libraries/AP_Param/AP_Param_config.h \
+ ../../libraries/AP_HAL/utility/Socket.h \
+ ../../libraries/AP_HAL/utility/Socket.hpp \
+ ../../libraries/AP_Networking/AP_Networking_address.h
