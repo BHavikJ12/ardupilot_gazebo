@@ -213,7 +213,7 @@ class VisualGuidanceNode(Node):
             self.get_logger().error("Failed to arm.")
             return
 
-        if not self.takeoff(5.0):
+        if not self.takeoff(10.0):
             self.get_logger().error("Failed to initiate take‑off.")
             return
 
