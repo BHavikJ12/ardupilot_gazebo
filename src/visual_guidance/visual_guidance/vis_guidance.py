@@ -42,11 +42,16 @@ class VisualGuidanceNode(Node):
 
         self.centering_err = (0,0)
         self.motion_err = (0,0)     
-        self.kp_x, self.ki_x, self.kd_x = 0.008, 0.000, 0.003
-        self.kp_y, self.ki_y, self.kd_y = 0.008, 0.000, 0.003
+        self.kp_x, self.ki_x, self.kd_x = 0.1, 0.000, 0.03
+        self.kp_y, self.ki_y, self.kd_y = 0.1, 0.000, 0.03
         self._int_x = self._int_y = 0.0
         self._prev_err_x = self._prev_err_y = 0.0
+        self.pid_dt = 1.0 / 30.0  # 30 Hz
         self.create_timer(self.pid_dt, self.pid_loop)
+
+        self.target_acquired = False
+        self.mode_switched = False
+
 
     def set_flight_mode(self, mode: str = "STABILIZE",
                         max_retries: int = 1,
@@ -182,6 +187,21 @@ class VisualGuidanceNode(Node):
 
         self.get_logger().error("Failed to initiate takeoff after retries.")
         return False
+    
+    def set_param(self,param_id, param_value, param_type):
+        print(f"Setting {param_id} to {param_value}")
+        self.master.mav.param_set_send(
+            self.master.target_system,
+            self.master.target_component,
+            param_id.encode('utf-8'),
+            float(param_value),
+            param_type
+        )
+        while True:
+            msg = self.master.recv_match(type='PARAM_VALUE', blocking=True, timeout=2)
+            if msg and msg.param_id.strip('\x00') == param_id:
+                print(f"Confirmed: {msg.param_id} = {msg.param_value}")
+                break
 
     def set_gimbal_angles(
         self,
@@ -213,22 +233,36 @@ class VisualGuidanceNode(Node):
         if self._startup_done:
             return 
 
-        if not self.set_flight_mode("GUIDED"):
-            self.get_logger().error("Failed to set GUIDED mode.")
+        # if not self.set_flight_mode("GUIDED"):
+        #     self.get_logger().error("Failed to set GUIDED mode.")
+        #     return
+
+        # if not self.arm():
+        #     self.get_logger().error("Failed to arm.")
+        #     return
+
+        # if not self.takeoff(10.0):
+        #     self.get_logger().error("Failed to initiate take‑off.")
             return
 
-        if not self.arm():
-            self.get_logger().error("Failed to arm.")
-            return
+        self.set_param("ANGLE_MAX", 8000, mavutil.mavlink.MAV_PARAM_TYPE_INT32)
+        self.set_param("ATC_ACCEL_P_MAX", 110000.0, mavutil.mavlink.MAV_PARAM_TYPE_REAL32)
 
-        if not self.takeoff(10.0):
-            self.get_logger().error("Failed to initiate take‑off.")
-            return
+        self.set_flight_mode("GUIDED")
+        self.arm()
+        self.takeoff(10.0)
 
         self.set_gimbal_angles(pitch_deg=0.0, roll_deg=0.0, yaw_deg=0.0)
-
+ 
         self.get_logger().info("Startup sequence complete ✔️")
         self._startup_done = True
+
+        # time.sleep(20)
+        # print("stabilize")
+        # self.set_flight_mode("STABILIZE")
+        # if not self.set_flight_mode("STABILIZE"):
+        #     self.get_logger().error("GUIDED→STABILIZE failed.")
+
 
     def run_startup_thread(self):
         if self._startup_done:
@@ -302,6 +336,17 @@ class VisualGuidanceNode(Node):
         ok_kcf, bbox_kcf = self.kcf.update(frame)
 
         if ok_kcf:
+
+            if not self.target_acquired:
+                self.target_acquired = True     # latch it
+                self.get_logger().info("🎯 Target locked – requesting STABILIZE mode")
+                self.set_flight_mode("STABILIZE")
+                # if self.set_flight_mode("STABILIZE"):
+                #     self.mode_switched = True
+                # else:
+                #     self.get_logger().error("Could not switch to STABILIZE")
+
+
             x, y, w, h = map(int, bbox_kcf)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.putText(frame, "Tracking (KCF)", (x, y - 10),
@@ -336,34 +381,43 @@ class VisualGuidanceNode(Node):
         #             0.7, (255, 255, 0), 2)
 
     def pid(self, err, axis):
-        if axis == 'x':
+        if axis == 'x':                               # roll
             kp, ki, kd = self.kp_x, self.ki_x, self.kd_x
             self._int_x += err * self.pid_dt
             deriv = (err - self._prev_err_x) / self.pid_dt
             self._prev_err_x = err
-            pitch = 1500 + (kp * err + ki * self._int_x + kd * deriv)
-            return pitch
+            #  ➜ pid_out is in “pixel error × gain” units
+            pid_out = kp * err + ki * self._int_x + kd * deriv
+            #  ➜ map to RC 1000‑2000 around centre 1500
+            return int(np.clip(1500 + pid_out * 100, 1000, 2000))
 
-        elif axis == 'y':
+        else:                                         # pitch (axis 'y')
             kp, ki, kd = self.kp_y, self.ki_y, self.kd_y
             self._int_y += err * self.pid_dt
             deriv = (err - self._prev_err_y) / self.pid_dt
             self._prev_err_y = err
-            roll = 1500 - (kp * err + ki * self._int_y + kd * deriv)
-            return roll
+            pid_out = kp * err + ki * self._int_y + kd * deriv
+            # invert sign because image Y grows downward
+            return int(np.clip(1500 - pid_out * 100, 1000, 2000))
+
 
     def pid_loop(self):
-        if not self._startup_done or not self.roi_selected:
+        if not (self._startup_done and self.roi_selected):
             return
 
-        err_x, err_y = self.centering_err  
-        u_x = self.pid(err_x, 'x')         
-        u_y = self.pid(err_y, 'y')        
+        roll_cmd  = self.pid(self.centering_err[0], 'x')   # CH1
+        pitch_cmd = self.pid(self.centering_err[1], 'y')   # CH2
+        print(pitch_cmd)
+        print(roll_cmd)
+        throttle_cmd = 1200                                # CH3 (hold)
+        yaw_cmd      = 1500                                # CH4 (hold)
 
-        roll_cmd  = float(np.clip(u_x, -10.0, 10.0))
-        pitch_cmd = float(np.clip(-u_y, -10.0, 10.0)) 
-
-        self.set_flight_mode("STABILIZE")
+        self.master.mav.rc_channels_override_send(
+            self.master.target_system,
+            self.master.target_component,
+            roll_cmd, pitch_cmd, throttle_cmd, yaw_cmd,
+            0, 0, 0, 0
+        )
 
 
     def image_callback(self, msg: Image):
