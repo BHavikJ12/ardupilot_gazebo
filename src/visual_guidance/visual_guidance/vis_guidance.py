@@ -28,17 +28,25 @@ class VisualGuidanceNode(Node):
         )
 
         self._startup_done = False
-        self._startup_timer = self.create_timer(1.0, self.run_startup_thread)
-
+        threading.Timer(5.0, self.run_startup_thread).start()
+       
         # self.trk = cv2.TrackerKCF_create()    # only kcf
+        self.kcf = cv2.TrackerKCF_create()      # fused kcf & csrt
+        self.csrt = cv2.TrackerCSRT_create()    # fused kcf & csrt
+        self.frame_count = 0                    # fused kcf & csrt
         self.roi_selected = False
         self.prev_time = time.time()
         self.fps = 0.0
         self.awaiting_roi = False
+        self.prev_centroid = None
 
-        self.kcf = cv2.TrackerKCF_create()      # fused kcf & csrt
-        self.csrt = cv2.TrackerCSRT_create()    # fused kcf & csrt
-        self.frame_count = 0                    # fused kcf & csrt
+        self.centering_err = (0,0)
+        self.motion_err = (0,0)     
+        self.kp_x, self.ki_x, self.kd_x = 0.008, 0.000, 0.003
+        self.kp_y, self.ki_y, self.kd_y = 0.008, 0.000, 0.003
+        self._int_x = self._int_y = 0.0
+        self._prev_err_x = self._prev_err_y = 0.0
+        self.create_timer(self.pid_dt, self.pid_loop)
 
     def set_flight_mode(self, mode: str = "STABILIZE",
                         max_retries: int = 1,
@@ -221,7 +229,6 @@ class VisualGuidanceNode(Node):
 
         self.get_logger().info("Startup sequence complete ✔️")
         self._startup_done = True
-        self._startup_timer.cancel() 
 
     def run_startup_thread(self):
         if self._startup_done:
@@ -256,11 +263,11 @@ class VisualGuidanceNode(Node):
                         (0, 0, 255), 2)
 
         # FPS counter
-        now = time.time()
-        self.fps = 1.0 / (now - self.prev_time)
-        self.prev_time = now
-        cv2.putText(frame, f"FPS: {self.fps:.2f}", (20, 70), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7, (255, 255, 0), 2)
+        # now = time.time()
+        # self.fps = 1.0 / (now - self.prev_time)
+        # self.prev_time = now
+        # cv2.putText(frame, f"FPS: {self.fps:.2f}", (20, 70), cv2.FONT_HERSHEY_SIMPLEX,
+        #             0.7, (255, 255, 0), 2)
 
     def iou(self, boxA, boxB):
         xA = max(boxA[0], boxB[0])
@@ -300,32 +307,63 @@ class VisualGuidanceNode(Node):
             cv2.putText(frame, "Tracking (KCF)", (x, y - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-            # Periodic check with CSRT
-            if self.frame_count % 10 == 0:
-                ok_csrt, bbox_csrt = self.csrt.update(frame)
-                if ok_csrt and self.iou(bbox_kcf, bbox_csrt) < 0.5:
-                    self.kcf = cv2.TrackerKCF_create()
-                    self.kcf.init(frame, bbox_csrt)
-        else:
-            # KCF lost track → fallback to CSRT
-            ok_csrt, bbox_csrt = self.csrt.update(frame)
-            if ok_csrt:
-                self.kcf = cv2.TrackerKCF_create()
-                self.kcf.init(frame, bbox_csrt)
-                x, y, w, h = map(int, bbox_csrt)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
-                cv2.putText(frame, "Recovered (CSRT)", (x, y - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
-            else:
-                cv2.putText(frame, "Lost", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (0, 0, 255), 2)
+            # ---------- NEW: centroid + errors ----------
+            cx, cy = x + w / 2.0, y + h / 2.0          # centroid
+            img_h, img_w = frame.shape[:2]
+
+            self.centering_err  = (cx - img_w / 2.0, cy - img_h / 2.0)
+            self.motion_err     = (0.0, 0.0)
+            if self.prev_centroid is not None:
+                self.motion_err = (cx - self.prev_centroid[0],
+                            cy - self.prev_centroid[1])
+            self.prev_centroid = (cx, cy)
+
+            # Optional visual overlay  (green = centering, yellow = motion)
+            cv2.drawMarker(frame, (int(cx), int(cy)), (0, 255, 255),
+                        markerType=cv2.MARKER_CROSS, markerSize=12, thickness=2)
+            cv2.putText(frame,
+                        f"ctr_err: ({self.centering_err[0]:+.1f}, {self.centering_err[1]:+.1f})",
+                        (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
+            cv2.putText(frame,
+                        f"mot_err: ({self.motion_err[0]:+.1f}, {self.motion_err[1]:+.1f})",
+                        (20, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 255), 2)
 
         # FPS Counter
-        now = time.time()
-        self.fps = 1.0 / (now - self.prev_time)
-        self.prev_time = now
-        cv2.putText(frame, f"FPS: {self.fps:.2f}", (20, 70), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.7, (255, 255, 0), 2)
+        # now = time.time()
+        # self.fps = 1.0 / (now - self.prev_time)
+        # self.prev_time = now
+        # cv2.putText(frame, f"FPS: {self.fps:.2f}", (20, 70), cv2.FONT_HERSHEY_SIMPLEX,
+        #             0.7, (255, 255, 0), 2)
+
+    def pid(self, err, axis):
+        if axis == 'x':
+            kp, ki, kd = self.kp_x, self.ki_x, self.kd_x
+            self._int_x += err * self.pid_dt
+            deriv = (err - self._prev_err_x) / self.pid_dt
+            self._prev_err_x = err
+            pitch = 1500 + (kp * err + ki * self._int_x + kd * deriv)
+            return pitch
+
+        elif axis == 'y':
+            kp, ki, kd = self.kp_y, self.ki_y, self.kd_y
+            self._int_y += err * self.pid_dt
+            deriv = (err - self._prev_err_y) / self.pid_dt
+            self._prev_err_y = err
+            roll = 1500 - (kp * err + ki * self._int_y + kd * deriv)
+            return roll
+
+    def pid_loop(self):
+        if not self._startup_done or not self.roi_selected:
+            return
+
+        err_x, err_y = self.centering_err  
+        u_x = self.pid(err_x, 'x')         
+        u_y = self.pid(err_y, 'y')        
+
+        roll_cmd  = float(np.clip(u_x, -10.0, 10.0))
+        pitch_cmd = float(np.clip(-u_y, -10.0, 10.0)) 
+
+        self.set_flight_mode("STABILIZE")
 
 
     def image_callback(self, msg: Image):
