@@ -61,14 +61,14 @@ def arm():
     print(f"ACK: {ack}")
 
 set_mode_stabilize()
-# arm()
+arm()
 
 # RC channels: 1=roll, 2=pitch, 3=throttle, 4=yaw
 # Override values: 1000-2000, 1500 = neutral
 # Example: forward pitch and medium throttle
 RC_ROLL     = 1500  # no roll
 RC_PITCH    = 1150  # forward pitch
-RC_THROTTLE = 1300  # medium throttle
+RC_THROTTLE = 1600  # medium throttle
 RC_YAW      = 1500  # no yaw
 
 print("Sending continuous RC overrides... Press Ctrl+C to stop.")
