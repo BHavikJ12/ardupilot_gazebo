@@ -38,8 +38,8 @@ class VisualGuidanceNode(Node):
 
         self.centering_err = (0,0)
         self.motion_err = (0,0)     
-        self.kp_x, self.ki_x, self.kd_x = 0.09, 0.000, 0.3
-        self.kp_y, self.ki_y, self.kd_y = 0.09, 0.000, 0.3
+        self.kp_x, self.ki_x, self.kd_x = 0.9, 0.000, 0.0
+        self.kp_y, self.ki_y, self.kd_y = 0.9, 0.000, 0.0
         self._int_x = self._int_y = 0.0
         self._prev_err_x = self._prev_err_y = 0.0
         self.pid_dt = 1.0 / 30.0  # 30 Hz
@@ -68,7 +68,6 @@ class VisualGuidanceNode(Node):
                 0, 0, 0, 0, 0)
 
             ack = self.master.recv_match(type="COMMAND_ACK",blocking=True,timeout=ack_timeout)
-            print(ack)
 
             # if not ack or ack.command != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
             #     self.get_logger().warning("[WARN] No COMMAND_ACK or MAV_CMD_DO_SET_MODE not available")
@@ -338,23 +337,27 @@ class VisualGuidanceNode(Node):
         #             0.7, (255, 255, 0), 2)
 
     def pid(self, err: float, axis: str):
+
+        scale = 500 / 300  # → ~1.333 µs/px
+        err_scaled = err * scale
+
         if axis == 'x':                               # roll
             kp, ki, kd = self.kp_x, self.ki_x, self.kd_x
-            self._int_x += err * self.pid_dt
-            deriv = (err - self._prev_err_x) / self.pid_dt
-            self._prev_err_x = err
-            roll_out = round(kp * err + ki * self._int_x + kd * deriv, 3)
-            self.get_logger().info(f"Roll Error {err} - Roll Out {roll_out}")
+            self._int_x += err_scaled * self.pid_dt
+            deriv = (err_scaled - self._prev_err_x) / self.pid_dt
+            self._prev_err_x = err_scaled
+            roll_out = round(kp * err_scaled + ki * self._int_x + kd * deriv, 3)
+            # self.get_logger().info(f"Roll Error {err_scaled} - Roll Out {roll_out}")
             return int(np.clip(1500 + roll_out, 1100, 1900))
 
         else:                                         # pitch
             kp, ki, kd = self.kp_y, self.ki_y, self.kd_y
-            self._int_y += err * self.pid_dt
-            deriv = (err - self._prev_err_y) / self.pid_dt
-            self._prev_err_y = err
-            pitch_out = round(kp * err + ki * self._int_y + kd * deriv, 3)
-            self.get_logger().info(f"Pitch Error {err} - Pitch Out {pitch_out}")
-            return int(np.clip(1500 + pitch_out, 1100, 1900))
+            self._int_y += err_scaled * self.pid_dt
+            deriv = (err_scaled - self._prev_err_y) / self.pid_dt
+            self._prev_err_y = err_scaled
+            pitch_out = round(kp * err_scaled + ki * self._int_y + kd * deriv, 3)
+            self.get_logger().info(f"Pitch Error {err_scaled} - Pitch Out {pitch_out}")
+            return int(np.clip(1500 - pitch_out, 1000, 2000))
 
 
     def pid_loop(self):
@@ -363,8 +366,8 @@ class VisualGuidanceNode(Node):
 
         roll_cmd  = self.pid(self.centering_err[0], 'x')   # CH1
         pitch_cmd = self.pid(self.centering_err[1], 'y')   # CH2
-        self.get_logger().info(f"Roll CMD {roll_cmd} - Pitch CMD {pitch_cmd}")
-        throttle_cmd = 1200                                # CH3 (hold)
+        self.get_logger().info(f"Pitch CMD {pitch_cmd}")
+        throttle_cmd = 1380                                # CH3 (hold)
         yaw_cmd      = 1500                                # CH4 (hold)
 
         self.master.mav.rc_channels_override_send(

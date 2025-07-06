@@ -97,7 +97,7 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                "rviz", default_value="true", description="Open RViz."
+                "rviz", default_value="false", description="Open RViz."
             ),
             gz_sim_server,
             gz_sim_gui,
